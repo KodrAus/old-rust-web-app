@@ -28,7 +28,7 @@ fn main() {
         .build();
 
     // Check our queue before each request to see if it's over capacity.
-    let backpressure = worker::Backpressure { to_check: vec![Box::new(tx.clone())] };
+    let backpressure = worker::Backpressure::new().add_queue(tx.clone());
 
     // Create a HTTP handler that will push a message and return 200.
     let mut chain = Chain::new(move |_: &mut Request| {

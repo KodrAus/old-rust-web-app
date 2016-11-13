@@ -57,11 +57,23 @@ use iron::BeforeMiddleware;
 ///
 /// If any of these queues fail the check then a `HTTP 503` error is returned.
 pub struct Backpressure {
-    /// A list of queues to check.
-    pub to_check: Vec<Box<queue::IsFull>>,
+    to_check: Vec<Box<queue::IsFull>>,
 }
 
 impl Backpressure {
+    pub fn new() -> Self {
+        Backpressure { to_check: vec![] }
+    }
+
+    /// Add a queue to check.
+    pub fn add_queue<T>(mut self, q: T) -> Self
+        where T: 'static + queue::IsFull
+    {
+        self.to_check.push(Box::new(q));
+
+        self
+    }
+
     fn check(&self) -> Result<()> {
         if self.to_check.iter().any(|q| q.is_full()) {
             Err(ErrorKind::QueueIsFull.into())
