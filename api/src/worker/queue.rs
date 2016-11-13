@@ -37,20 +37,20 @@
 //! so they can deal with a system failure that causes them to handle the
 //! same message multiple times.
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use crossbeam::sync::SegQueue;
 
 /// The producing end of a queue.
 ///
 /// This structure can be safely cloned and shared amongst threads.
 #[derive(Debug, Clone)]
-pub struct Producer<T>(Arc<SegQueue<T>>, Option<(usize, Arc<Mutex<usize>>)>);
+pub struct Producer<T>(Arc<SegQueue<T>>, Option<(usize, Arc<RwLock<usize>>)>);
 
 /// The consuming end of a queue.
 ///
 /// This structure can be safely cloned and shared amongst threads.
 #[derive(Debug, Clone)]
-pub struct Consumer<T>(Arc<SegQueue<T>>, Option<Arc<Mutex<usize>>>);
+pub struct Consumer<T>(Arc<SegQueue<T>>, Option<Arc<RwLock<usize>>>);
 
 /// Builder for a new queue.
 pub struct QueueBuilder<T> {
@@ -78,7 +78,7 @@ impl<T> QueueBuilder<T> {
     pub fn build(self) -> (Producer<T>, Consumer<T>) {
         let queue = Arc::new(SegQueue::new());
 
-        let len_ctr = self.max_len.map(|max_len| (max_len, Arc::new(Mutex::new(0))));
+        let len_ctr = self.max_len.map(|max_len| (max_len, Arc::new(RwLock::new(0))));
 
         let tx = Producer(queue.clone(), len_ctr.clone());
         let rx = Consumer(queue, len_ctr.map(|(_, len)| len));
@@ -109,7 +109,7 @@ impl<T> Producer<T> {
     /// then the queue length can grow indefinitely.
     pub fn push(&self, msg: T) {
         if let Some((_, ref len)) = self.1 {
-            let mut len = len.lock().unwrap();
+            let mut len = len.write().unwrap();
             *len += 1;
         }
 
@@ -120,7 +120,7 @@ impl<T> Producer<T> {
 impl<T: Send + Sync> IsFull for Producer<T> {
     fn is_full(&self) -> bool {
         if let Some((max_len, ref len)) = self.1 {
-            let len = len.lock().unwrap();
+            let len = len.read().unwrap();
             *len >= max_len
         } else {
             false
@@ -133,7 +133,7 @@ impl<T> Consumer<T> {
     pub fn try_pop(&self) -> Option<T> {
         if let Some(msg) = self.0.try_pop() {
             if let Some(ref len) = self.1 {
-                let mut len = len.lock().unwrap();
+                let mut len = len.write().unwrap();
                 *len -= 1;
             }
 
