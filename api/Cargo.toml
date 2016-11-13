@@ -10,3 +10,9 @@ crossbeam = "*"
 
 # Gives us some primitives for promise-like results
 futures = "*"
+
+# Our base server framework
+iron = "*"
+
+# Makes it easy to write new Rust Error types
+error-chain = "*"

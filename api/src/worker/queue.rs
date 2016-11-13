@@ -87,6 +87,21 @@ impl<T> QueueBuilder<T> {
     }
 }
 
+pub trait IsFull
+    where Self: Send + Sync
+{
+    /// Check whether the queue is 'full'.
+    ///
+    /// The idea here is to keep the queues as simple as possible.
+    /// So at the start of a request, you can poll the worker queues and see if any are full.
+    /// At that stage you can decide what to do about it, which could be one of a number of things:
+    ///
+    /// 1. Ignore it and keep pushing messages
+    /// 1. Block until the length goes down
+    /// 1. Bork the request
+    fn is_full(&self) -> bool;
+}
+
 impl<T> Producer<T> {
     /// Push a message onto the queue.
     ///
@@ -100,17 +115,10 @@ impl<T> Producer<T> {
 
         self.0.push(msg)
     }
+}
 
-    /// Check whether the queue is 'full'.
-    ///
-    /// The idea here is to keep the queues as simple as possible.
-    /// So at the start of a request, you can poll the worker queues and see if any are full.
-    /// At that stage you can decide what to do about it, which could be one of a number of things:
-    ///
-    /// 1. Ignore it and keep pushing messages
-    /// 1. Block until the length goes down
-    /// 1. Bork the request
-    pub fn is_full(&self) -> bool {
+impl<T: Send + Sync> IsFull for Producer<T> {
+    fn is_full(&self) -> bool {
         if let Some((max_len, ref len)) = self.1 {
             let len = len.lock().unwrap();
             *len >= max_len
