@@ -23,6 +23,4 @@ script:
   - |
       cd api &&
       travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo doc &&
-      travis-cargo doc-upload
+      travis-cargo test
