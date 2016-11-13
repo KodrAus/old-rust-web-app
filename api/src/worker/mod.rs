@@ -75,7 +75,7 @@ impl Backpressure {
     }
 
     /// Check the length of each queue.
-    /// 
+    ///
     /// Returns `Ok` if no queues are full, otherwise returns a `QueueIsFull` error.
     pub fn check(&self) -> Result<()> {
         if self.to_check.iter().any(|q| q.is_full()) {
