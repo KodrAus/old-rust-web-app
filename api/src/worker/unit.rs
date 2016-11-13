@@ -3,16 +3,21 @@
 //! This is a very simple wrapper around an OS thread that will pop
 //! messages off a queue and run some function over them.
 //! Right now it doesn't really make any assumptions.
-//! 
+//!
 //! The worker doesn't deal with errors, _panicking_ is the root of all evil and will
 //! bring an application to a halt because of backpressure.
 //! So instead of _ever_ calling `.unwrap()` in a unit of work, either complete a future
 //! in the message with an appropriate error, or log it and move on.
-//! 
+//!
+//! We could create an alternative worker that expects to respond to messages with
+//! a future.
+//! That way, the unit function run per message could return a `Result` type, that's
+//! send back to the caller for them to deal with.
+//!
 //! # Examples
-//! 
+//!
 //! Spawn a new worker that prints each message it receives:
-//! 
+//!
 //! ```no_run
 //! # use ::worker::queue::*;
 //! # use ::worker::unit::*;

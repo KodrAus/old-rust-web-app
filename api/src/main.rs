@@ -4,15 +4,21 @@
 //! language.
 //! If I was going to write a web app in Rust today,
 //! it would probably look something like this.
-//! 
+//!
 //! # The stack
-//! 
-//! - [`iron`]() as the web framework
-//! - [`futures`]() for asynchronous promise primitives
-//! - [`crossbeam`]() for lock-free queues.
-//! 
+//!
+//! - [`iron`](https://docs.rs/iron/*/iron/) as the web framework
+//! - [`futures`](https://docs.rs/futures/*/futures/) for asynchronous promise primitives
+//! - [`crossbeam`](https://docs.rs/crossbeam/*/crossbeam/) for lock-free queues
+//! - [`error-chain`](https://docs.rs/error-chain/*/error_chain/) for better error types.
+//!
 //! # Design
-//! 
+//!
+//! Iron follows a middleware-based request processing design, so it's easy to extend
+//! and work with.
+//! This app tries to avoid _middleware soup_ by not sharing state across middleware where
+//! possible.
+//!
 //! This app offloads work to background workers in dedicated threads for concurrency
 //! or for stuff that needs to be done out-of-band with an individual request.
 //! Rust only has OS threads, so we have to be stingy about when threads are spawned.
@@ -37,7 +43,7 @@ use iron::prelude::*;
 type Message = futures::Complete<String>;
 
 fn main() {
-    // Create a queue with a sender and receiver and max length of 1.
+    // Create a queue with a sender and receiver and max length.
     let (tx, rx) = worker::queue::QueueBuilder::new()
         .with_max_len(500)
         .build();
@@ -67,7 +73,6 @@ fn main() {
     chain.link_before(backpressure);
 
     // Run the web server.
-    // NOTE: This will start throwing 503's after 1 request right now.
     Iron::new(chain).http("localhost:3000").unwrap();
     worker.join().unwrap();
 }

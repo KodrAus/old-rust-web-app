@@ -1,18 +1,19 @@
 //! # Worker queue
 //!
 //! This is a simple wrapper around a thread-safe _Multi Producer, Multi Consumer_ queue.
-//! The actual queue implementation is provided by 
-//! [`crossbeam`](aturon.github.io/crossbeam-doc/crossbeam/sync/struct.SegQueue.html).
+//! The actual queue implementation is provided by
+//! [`crossbeam`](https://docs.rs/crossbeam/*/crossbeam/sync/struct.SegQueue.html).
 //!
 //! If no maximum length is set then this queue is completely non-blocking.
 //! If a maximum length is set then each push and pop operation will lock
 //! a counter with the current length.
 //!
-//! This queue provides a simple [back-pressure]() mechanism by exposing a max length parameter.
+//! This queue provides a simple backpressure mechanism by exposing a max length parameter.
 //! The length isn't enforced when pushing messages to keep things simple, but it's expected that
 //! a caller will check the length and decide what to do about it before pushing a message.
 //! It turns out this is a good enough approach when you're dealing with a closed system,
-//! like our API where it's easy to just write an Iron [middleware]()
+//! like our API where it's easy to just write an
+//! [Iron Middleware](https://docs.rs/iron/*/iron/middleware/trait.BeforeMiddleware.html)
 //! to check queues on each request.
 //!
 //! The implementation here isn't always appropriate, deciding that a service is _unavailable_
@@ -24,7 +25,7 @@
 //! not really necessary.
 //! For queues that are completely asynchronous it may be worth investigating, especially if an
 //! action that pushes a message is publically accessible.
-//! 
+//!
 //! # Examples
 //!
 //! Build a queue with a recommended max length of `500`:
@@ -111,7 +112,7 @@ impl<T> QueueBuilder<T> {
 }
 
 /// Check whether a queue is full.
-/// 
+///
 /// This trait can be used over a number of queues with different message types.
 pub trait IsFull
     where Self: Send + Sync
@@ -125,7 +126,7 @@ pub trait IsFull
     /// 1. Ignore it and keep pushing messages
     /// 1. Block until the length goes down
     /// 1. Bork the request.
-    /// 
+    ///
     /// Our `Backpressure` middleware implements option 3.
     fn is_full(&self) -> bool;
 }
