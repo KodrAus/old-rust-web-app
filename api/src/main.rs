@@ -4,6 +4,18 @@
 //! language.
 //! If I was going to write a web app in Rust today,
 //! it would probably look something like this.
+//! 
+//! # The stack
+//! 
+//! - [`iron`]() as the web framework
+//! - [`futures`]() for asynchronous promise primitives
+//! - [`crossbeam`]() for lock-free queues.
+//! 
+//! # Design
+//! 
+//! This app offloads work to background workers in dedicated threads for concurrency
+//! or for stuff that needs to be done out-of-band with an individual request.
+//! Rust only has OS threads, so we have to be stingy about when threads are spawned.
 
 #[macro_use]
 extern crate error_chain;

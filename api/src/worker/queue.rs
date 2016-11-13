@@ -1,7 +1,8 @@
 //! # Worker queue
 //!
 //! This is a simple wrapper around a thread-safe _Multi Producer, Multi Consumer_ queue.
-//! The actual queue implementation is provided by [`crossbeam`]().
+//! The actual queue implementation is provided by 
+//! [`crossbeam`](aturon.github.io/crossbeam-doc/crossbeam/sync/struct.SegQueue.html).
 //!
 //! If no maximum length is set then this queue is completely non-blocking.
 //! If a maximum length is set then each push and pop operation will lock
@@ -14,6 +15,16 @@
 //! like our API where it's easy to just write an Iron [middleware]()
 //! to check queues on each request.
 //!
+//! The implementation here isn't always appropriate, deciding that a service is _unavailable_
+//! based on some arbitrary queue length isn't an accurate measure and could lead to
+//! underutilisation.
+//! So monitored queues are opt-in in two places: on the queue itself, and the mechanism
+//! that monitors them.
+//! For queues that are required to pop any pushed messages in the same request lifetime it's
+//! not really necessary.
+//! For queues that are completely asynchronous it may be worth investigating, especially if an
+//! action that pushes a message is publically accessible.
+//! 
 //! # Examples
 //!
 //! Build a queue with a recommended max length of `500`:
@@ -99,6 +110,9 @@ impl<T> QueueBuilder<T> {
     }
 }
 
+/// Check whether a queue is full.
+/// 
+/// This trait can be used over a number of queues with different message types.
 pub trait IsFull
     where Self: Send + Sync
 {
@@ -110,7 +124,9 @@ pub trait IsFull
     ///
     /// 1. Ignore it and keep pushing messages
     /// 1. Block until the length goes down
-    /// 1. Bork the request
+    /// 1. Bork the request.
+    /// 
+    /// Our `Backpressure` middleware implements option 3.
     fn is_full(&self) -> bool;
 }
 

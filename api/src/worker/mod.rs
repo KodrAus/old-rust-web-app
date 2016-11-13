@@ -9,11 +9,12 @@
 //!
 //! We have to be careful when throwing work onto a background queue that isn't
 //! completed in the lifetime of the request because it can cause the queue to
-//! chew up all our memory.
+//! chew up all our memory if messages are pushed faster than they can be popped for
+//! an extended period of time.
 //! To get around this we apply
 //! [_backpressure_](http://www.reactivemanifesto.org/glossary#Back-Pressure)
 //! in the form of a high-watermark on our queue lengths.
-//! When the queue goes above that watermark we start rejecting requests with a `HTTP 503` error.
+//! When the queue goes above that watermark we start rejecting requests with a `HTTP 503` error. 
 //!
 //! # So why have background workers?
 //!
@@ -56,6 +57,11 @@ use iron::BeforeMiddleware;
 /// for checking worker queue lengths before proceeding with the request.
 ///
 /// If any of these queues fail the check then a `HTTP 503` error is returned.
+/// 
+/// One option that could be explored is checking certain queues on certain endpoints,
+/// rather than always checking all queues.
+/// This would reduce contention on reading queue lengths, and allow some actions
+/// to continue to operate even if others are unavailable.
 pub struct Backpressure {
     to_check: Vec<Box<queue::IsFull>>,
 }

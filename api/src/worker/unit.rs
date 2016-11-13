@@ -4,6 +4,11 @@
 //! messages off a queue and run some function over them.
 //! Right now it doesn't really make any assumptions.
 //! 
+//! The worker doesn't deal with errors, _panicking_ is the root of all evil and will
+//! bring an application to a halt because of backpressure.
+//! So instead of _ever_ calling `.unwrap()` in a unit of work, either complete a future
+//! in the message with an appropriate error, or log it and move on.
+//! 
 //! # Examples
 //! 
 //! Spawn a new worker that prints each message it receives:
@@ -29,11 +34,6 @@ use worker::queue::Consumer;
 /// database connection, in the _context_.
 /// The _message_ is the submitted input that's popped off a queue.
 /// The _unit function_ is the function that's run for each message on the queue.
-///
-/// The worker doesn't deal with errors, _panicking_ is the root of all evil and will
-/// bring an application to a halt because of backpressure.
-/// So instead of _ever_ calling `.unwrap()` in a unit of work, either complete a future
-/// in the message with an appropriate error, or log it and move on.
 pub struct Worker<C, M, F> {
     _c: PhantomData<C>,
     _m: PhantomData<M>,
