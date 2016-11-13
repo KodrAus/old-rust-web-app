@@ -3,6 +3,19 @@
 //! This is a very simple wrapper around an OS thread that will pop
 //! messages off a queue and run some function over them.
 //! Right now it doesn't really make any assumptions.
+//! 
+//! # Examples
+//! 
+//! Spawn a new worker that prints each message it receives:
+//! 
+//! ```no_run
+//! # use ::worker::queue::*;
+//! # use ::worker::unit::*;
+//! let (tx, rx) = QueueBuilder::<()>::new().build();
+//! let handle = Worker::spawn(rx, (), |_, msg| {
+//! 	println!("got a message");
+//! })
+//! ```
 
 use std::thread::{self, JoinHandle};
 use std::marker::PhantomData;
