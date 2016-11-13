@@ -43,14 +43,26 @@ use crossbeam::sync::SegQueue;
 /// The producing end of a queue.
 ///
 /// This structure can be safely cloned and shared amongst threads.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Producer<T>(Arc<SegQueue<T>>, Option<(usize, Arc<RwLock<usize>>)>);
+
+impl<T> Clone for Producer<T> {
+    fn clone(&self) -> Self {
+        Producer(self.0.clone(), self.1.clone())
+    }
+}
 
 /// The consuming end of a queue.
 ///
 /// This structure can be safely cloned and shared amongst threads.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Consumer<T>(Arc<SegQueue<T>>, Option<Arc<RwLock<usize>>>);
+
+impl<T> Clone for Consumer<T> {
+    fn clone(&self) -> Self {
+        Consumer(self.0.clone(), self.1.clone())
+    }
+}
 
 /// Builder for a new queue.
 pub struct QueueBuilder<T> {
