@@ -1,4 +1,4 @@
-#![feature(test)]
+#![feature(test, associated_consts)]
 extern crate test;
 use test::Bencher;
 
@@ -11,15 +11,17 @@ use webapp_demo::host::*;
 macro_rules! service {
     ($route:expr => $ident:ident) => (
         struct $ident;
+        impl Route for $ident {
+            const ROUTE: &'static str = $route;
+        }
+
         impl Get for $ident {
-            fn route(&self) -> &'static str { $route }
             fn call(&self, _: Params, _: Request) -> HttpFuture {
                 unimplemented!()
             }
         }
 
         impl Post for $ident {
-            fn route(&self) -> &'static str { $route }
             fn call(&self, _: Params, _: Request) -> HttpFuture {
                 unimplemented!()
             }

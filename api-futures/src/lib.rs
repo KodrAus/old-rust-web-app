@@ -1,4 +1,4 @@
-#![feature(box_syntax)]
+#![feature(box_syntax, associated_consts)]
 
 extern crate futures;
 extern crate hyper;

@@ -3,7 +3,7 @@ use futures;
 use hyper::{ self, StatusCode, Get as GetMethod, Post as PostMethod };
 use hyper::server::{ Service as HyperService, Request, Response };
 use route_recognizer::Router as Recognizer;
-use super::{ HttpFuture, Get, Post };
+use super::{ HttpFuture, Get, Post, Route };
 
 type HttpRouter<T> = Recognizer<Box<T>>;
 
@@ -27,15 +27,15 @@ impl RouterBuilder {
     }
 
     pub fn get<H>(mut self, handler: H) -> Self where 
-    H: Get + 'static {
-        self.get_router.add(handler.route(), Box::new(handler));
+    H: Get + Route + 'static {
+        self.get_router.add(H::ROUTE, Box::new(handler));
 
         self
     }
 
     pub fn post<H>(mut self, handler: H) -> Self where 
-    H: Post + 'static {
-        self.post_router.add(handler.route(), Box::new(handler));
+    H: Post + Route + 'static {
+        self.post_router.add(H::ROUTE, Box::new(handler));
 
         self
     }

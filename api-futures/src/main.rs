@@ -1,4 +1,4 @@
-#![feature(box_syntax)]
+#![feature(box_syntax, associated_consts)]
 
 extern crate futures;
 extern crate futures_cpupool;
@@ -20,9 +20,11 @@ struct Echo {
     cpu_pool: CpuPool
 }
 
-impl Get for Echo {
-    fn route(&self) -> &'static str { "/" }
+impl Route for Echo { 
+    const ROUTE: &'static str = "/"; 
+}
 
+impl Get for Echo {
     fn call(&self, _: Params, _: Request) -> HttpFuture {
         // Do some 'expensive work' on a background thread
         let work = self.cpu_pool
@@ -32,6 +34,7 @@ impl Get for Echo {
                     .and_then(|_| finished("Hello world".as_bytes()))
             }));
 
+        // When the work is finished, build a HTTP response
         let respond = work
             .then(|msg| {
                 let response = match msg {
