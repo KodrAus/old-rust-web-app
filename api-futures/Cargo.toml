@@ -4,9 +4,16 @@ version = "0.1.0"
 authors = ["Ashley Mannix <ashley.mannix@readify.net>"]
 
 [dependencies]
+# Gives us some primitives for promise-like results
 futures = { git = "https://github.com/alexcrichton/futures-rs" }
+
+# Gives us a cpu pool for running computations asynchronously
 futures-cpupool = { git = "https://github.com/alexcrichton/futures-rs" }
+
+# Gives us efficient promise-based timers
 tokio-timer = { git = "https://github.com/KodrAus/tokio-timer" }
+
+# Gives us a common service contract for async io
 tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
 hyper = { git = "https://github.com/KodrAus/hyper", branch = "tokio" }
 route-recognizer = "*"

@@ -9,8 +9,12 @@ type HttpRouter<T> = Recognizer<Box<T>>;
 
 #[derive(Clone)]
 pub struct Router {
-    get_router: Arc<HttpRouter<Get>>,
-    post_router: Arc<HttpRouter<Post>>,
+    routers: Arc<Box<Routers>>,
+}
+
+struct Routers {
+    get_router: HttpRouter<Get>,
+    post_router: HttpRouter<Post>,
 }
 
 pub struct RouterBuilder {
@@ -44,8 +48,12 @@ impl RouterBuilder {
 
     pub fn build(self) -> Router {
         Router {
-            get_router: Arc::new(self.get_router),
-            post_router: Arc::new(self.post_router),
+            routers: Arc::new(Box::new(
+                Routers {
+                    get_router: self.get_router,
+                    post_router: self.post_router,
+                }
+            ))
         }
     }
 }
@@ -67,7 +75,7 @@ impl HyperService for Router {
 
 impl Router {
     fn get(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.get_router.recognize(req.path().unwrap()) {
+        match self.routers.get_router.recognize(req.path().unwrap()) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
@@ -79,7 +87,7 @@ impl Router {
     }
 
     fn post(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.post_router.recognize(req.path().unwrap()) {
+        match self.routers.post_router.recognize(req.path().unwrap()) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
