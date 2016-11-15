@@ -5,6 +5,7 @@ extern crate futures_cpupool;
 extern crate tokio_timer;
 extern crate hyper;
 extern crate route_recognizer;
+extern crate webapp_demo;
 
 use std::time::Duration;
 use futures::{ Future, finished, lazy };
@@ -12,11 +13,8 @@ use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
 use hyper::StatusCode;
 use hyper::header::ContentLength;
-use hyper::server::{Server, Request, Response};
-
-pub mod host;
-
-use host::*;
+use hyper::server::{ Server, Request, Response };
+use webapp_demo::host::*;
 
 struct Echo {
     cpu_pool: CpuPool
@@ -58,8 +56,9 @@ impl Service for Echo {
 fn main() {
     let cpu_pool = CpuPool::new(4);
 
-    let mut router = host::router::Router::new();
-    router.get(Echo { cpu_pool: cpu_pool.clone() });
+    let router = RouterBuilder::new()
+        .get(Echo { cpu_pool: cpu_pool.clone() })
+        .build();
 
     let addr = "127.0.0.1:1337".parse().unwrap();
     let server = Server::http(&addr).unwrap();

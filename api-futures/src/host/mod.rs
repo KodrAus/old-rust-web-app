@@ -13,4 +13,6 @@ Self: Send + Sync {
     fn call(&self, params: Params, req: Request) -> HttpFuture;
 }
 
-pub mod router;
+mod router;
+
+pub use self::router::*;

@@ -5,30 +5,46 @@ use hyper::server::{ Service as HyperService, Request, Response };
 use route_recognizer::Router as Recognizer;
 use super::{ HttpFuture, Service };
 
-type HttpRouter = Recognizer<Arc<Box<Service>>>;
+type HttpRouter = Recognizer<Box<Service>>;
 
 #[derive(Clone)]
 pub struct Router {
+    get_router: Arc<HttpRouter>,
+    post_router: Arc<HttpRouter>
+}
+
+pub struct RouterBuilder {
     get_router: HttpRouter,
     post_router: HttpRouter
 }
 
-impl Router {
+impl RouterBuilder {
     pub fn new() -> Self {
-        Router {
+        RouterBuilder {
             get_router: HttpRouter::new(),
             post_router: HttpRouter::new()
         }
     }
 
-    pub fn get<H>(&mut self, handler: H) where 
+    pub fn get<H>(mut self, handler: H) -> Self where 
     H: Service + 'static {
-        self.get_router.add(handler.route(), Arc::new(Box::new(handler)))
+        self.get_router.add(handler.route(), Box::new(handler));
+
+        self
     }
 
-    pub fn post<H>(&mut self, handler: H) where 
+    pub fn post<H>(mut self, handler: H) -> Self where 
     H: Service + 'static {
-        self.post_router.add(handler.route(), Arc::new(Box::new(handler)))
+        self.post_router.add(handler.route(), Box::new(handler));
+
+        self
+    }
+
+    pub fn build(self) -> Router {
+        Router {
+            get_router: Arc::new(self.get_router),
+            post_router: Arc::new(self.post_router)
+        }
     }
 }
 
