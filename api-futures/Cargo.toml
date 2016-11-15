@@ -1,0 +1,11 @@
+[package]
+name = "webapp-demo"
+version = "0.1.0"
+authors = ["Ashley Mannix <ashley.mannix@readify.net>"]
+
+[dependencies]
+futures = { git = "https://github.com/alexcrichton/futures-rs" }
+futures-cpupool = { git = "https://github.com/alexcrichton/futures-rs" }
+tokio-timer = { git = "https://github.com/KodrAus/tokio-timer" }
+hyper = { git = "https://github.com/KodrAus/hyper", branch = "tokio" }
+route-recognizer = "0.1"
