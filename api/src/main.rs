@@ -34,6 +34,9 @@ extern crate iron;
 /// Error types.
 pub mod errors;
 
+/// Domain model.
+pub mod model;
+
 /// Background worker infrastructure.
 pub mod worker;
 

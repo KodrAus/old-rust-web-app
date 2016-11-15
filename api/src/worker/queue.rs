@@ -49,14 +49,15 @@
 //! so they can deal with a system failure that causes them to handle the
 //! same message multiple times.
 
-use std::sync::{Arc, RwLock};
+use std::sync::atomic::{ AtomicUsize, Ordering };
+use std::sync::Arc;
 use crossbeam::sync::SegQueue;
 
 /// The producing end of a queue.
 ///
 /// This structure can be safely cloned and shared amongst threads.
 #[derive(Debug)]
-pub struct Producer<T>(Arc<SegQueue<T>>, Option<(usize, Arc<RwLock<usize>>)>);
+pub struct Producer<T>(Arc<SegQueue<T>>, Option<(usize, Arc<AtomicUsize>)>);
 
 impl<T> Clone for Producer<T> {
     fn clone(&self) -> Self {
@@ -68,7 +69,7 @@ impl<T> Clone for Producer<T> {
 ///
 /// This structure can be safely cloned and shared amongst threads.
 #[derive(Debug)]
-pub struct Consumer<T>(Arc<SegQueue<T>>, Option<Arc<RwLock<usize>>>);
+pub struct Consumer<T>(Arc<SegQueue<T>>, Option<Arc<AtomicUsize>>);
 
 impl<T> Clone for Consumer<T> {
     fn clone(&self) -> Self {
@@ -102,7 +103,7 @@ impl<T> QueueBuilder<T> {
     pub fn build(self) -> (Producer<T>, Consumer<T>) {
         let queue = Arc::new(SegQueue::new());
 
-        let len_ctr = self.max_len.map(|max_len| (max_len, Arc::new(RwLock::new(0))));
+        let len_ctr = self.max_len.map(|max_len| (max_len, Arc::new(AtomicUsize::new(0))));
 
         let tx = Producer(queue.clone(), len_ctr.clone());
         let rx = Consumer(queue, len_ctr.map(|(_, len)| len));
@@ -138,8 +139,7 @@ impl<T> Producer<T> {
     /// then the queue length can grow indefinitely.
     pub fn push(&self, msg: T) {
         if let Some((_, ref len)) = self.1 {
-            let mut len = len.write().unwrap();
-            *len += 1;
+            let _ = len.fetch_add(1, Ordering::Relaxed);
         }
 
         self.0.push(msg)
@@ -149,8 +149,8 @@ impl<T> Producer<T> {
 impl<T: Send + Sync> IsFull for Producer<T> {
     fn is_full(&self) -> bool {
         if let Some((max_len, ref len)) = self.1 {
-            let len = len.read().unwrap();
-            *len >= max_len
+            let len = len.load(Ordering::Relaxed);
+            len >= max_len
         } else {
             false
         }
@@ -162,8 +162,7 @@ impl<T> Consumer<T> {
     pub fn try_pop(&self) -> Option<T> {
         if let Some(msg) = self.0.try_pop() {
             if let Some(ref len) = self.1 {
-                let mut len = len.write().unwrap();
-                *len -= 1;
+                let _ = len.fetch_sub(1, Ordering::Relaxed);
             }
 
             Some(msg)
