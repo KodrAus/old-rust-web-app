@@ -1,85 +1,71 @@
+#![feature(box_syntax)]
+
 extern crate futures;
 extern crate futures_cpupool;
 extern crate tokio_timer;
 extern crate hyper;
 extern crate route_recognizer;
 
-use std::sync::Arc;
 use std::time::Duration;
-use futures::Future;
+use futures::{ Future, finished, lazy };
 use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
-use hyper::{Get, Post, StatusCode};
+use hyper::StatusCode;
 use hyper::header::ContentLength;
-use hyper::server::{Server, Service, Request, Response};
-use route_recognizer::Router;
+use hyper::server::{Server, Request, Response};
 
-type HttpRouter = Router<Arc<Box<HttpHandler>>>;
-type HttpFuture = Box<Future<Item = Response, Error = hyper::Error>>;
-type HttpHandler = Service<Request = Request, Response = Response, Error = hyper::Error, Future = HttpFuture> + Send + Sync;
+pub mod host;
 
-#[derive(Clone)]
-struct Base {
-    router: Arc<HttpRouter>
-}
+use host::*;
 
-impl Service for Base {
-    type Request = Request;
-    type Response = Response;
-    type Error = hyper::Error;
-    type Future = HttpFuture;
-
-    fn call(&self, req: Request) -> Self::Future {
-        match self.router.recognize(req.path().unwrap()) {
-            Ok(route) => route.handler.call(req),
-            Err(_) => Box::new(futures::finished(Response::new().status(StatusCode::NotFound)))
-        }
-    }
-}
-
-#[derive(Clone)]
 struct Echo {
-    workers: CpuPool
+    cpu_pool: CpuPool
 }
 
 impl Service for Echo {
-    type Request = Request;
-    type Response = Response;
-    type Error = hyper::Error;
-    type Future = HttpFuture;
+    fn route(&self) -> &'static str { "/" }
 
-    fn call(&self, req: Request) -> Self::Future {
-        if req.method() != &Get {
-            return Box::new(futures::finished(Response::new().status(StatusCode::MethodNotAllowed)));
-        }
+    fn call(&self, _: Params, _: Request) -> HttpFuture {
+        // Do some 'expensive work' on a background thread
+        let work = self.cpu_pool
+            .spawn(lazy(|| {
+                Timer::default()
+                    .sleep(Duration::from_millis(1000))
+                    .and_then(|_| finished("Hello world".as_bytes()))
+            }));
 
-        Box::new(self.workers
-            .spawn(futures::lazy(|| {
-                let timer = Timer::default();
+        let respond = work
+            .then(|msg| {
+                let response = match msg {
+                    Ok(msg) => {
+                        Response::new()
+                            .header(ContentLength(msg.len() as u64))
+                            .body(msg)
+                    },
+                    Err(_) => {
+                        Response::new()
+                            .status(StatusCode::InternalServerError)
+                    }
+                };
 
-                timer.sleep(Duration::from_millis(1000))
-                        .and_then(|_| futures::finished("Hello world".as_bytes()))
-            }))
-            .then(|msg|
-                match msg {
-                    Ok(msg) => futures::finished(Response::new()
-                        .header(ContentLength(msg.len() as u64))
-                        .body(msg)),
-                    Err(_) => futures::finished(Response::new().status(StatusCode::InternalServerError))
-                }))
+                finished(response)
+            });
+
+        box respond
     }
 }
 
 fn main() {
-    let workers = CpuPool::new(4);
+    let cpu_pool = CpuPool::new(4);
 
-    let mut router: HttpRouter = Router::new();
-    router.add("/", Arc::new(Box::new(Echo { workers: workers.clone() })));
+    let mut router = host::router::Router::new();
+    router.get(Echo { cpu_pool: cpu_pool.clone() });
 
-    let router = Arc::new(router);
+    let addr = "127.0.0.1:1337".parse().unwrap();
+    let server = Server::http(&addr).unwrap();
+    let (lst, server) = server.standalone(move || Ok(router.clone())).unwrap();
 
-    let server = Server::http(&"127.0.0.1:1337".parse().unwrap()).unwrap();
-    let (listening, server) = server.standalone(move || Ok(Base { router: router.clone() })).unwrap();
-    println!("Listening on http://{}", listening);
+    println!("listening on {}", lst);
+
     server.run();
 }
