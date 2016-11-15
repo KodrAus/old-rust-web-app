@@ -8,20 +8,20 @@ extern crate route_recognizer;
 extern crate webapp_demo;
 
 use std::time::Duration;
-use futures::{ Future, finished, lazy };
+use futures::{Future, finished, lazy};
 use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
 use hyper::StatusCode;
 use hyper::header::ContentLength;
-use hyper::server::{ Server, Request, Response };
+use hyper::server::{Server, Request, Response};
 use webapp_demo::host::*;
 
 struct Echo {
-    cpu_pool: CpuPool
+    cpu_pool: CpuPool,
 }
 
-impl Route for Echo { 
-    const ROUTE: &'static str = "/"; 
+impl Route for Echo {
+    const ROUTE: &'static str = "/";
 }
 
 impl Get for Echo {
@@ -35,22 +35,18 @@ impl Get for Echo {
             }));
 
         // When the work is finished, build a HTTP response
-        let respond = work
-            .then(|msg| {
-                let response = match msg {
-                    Ok(msg) => {
-                        Response::new()
-                            .header(ContentLength(msg.len() as u64))
-                            .body(msg)
-                    },
-                    Err(_) => {
-                        Response::new()
-                            .status(StatusCode::InternalServerError)
-                    }
-                };
+        let respond = work.then(|msg| {
+            let response = match msg {
+                Ok(msg) => {
+                    Response::new()
+                        .header(ContentLength(msg.len() as u64))
+                        .body(msg)
+                }
+                Err(_) => Response::new().status(StatusCode::InternalServerError),
+            };
 
-                finished(response)
-            });
+            finished(response)
+        });
 
         box respond
     }
