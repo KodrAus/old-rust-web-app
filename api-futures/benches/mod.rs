@@ -11,7 +11,14 @@ use webapp_demo::host::*;
 macro_rules! service {
     ($route:expr => $ident:ident) => (
         struct $ident;
-        impl Service for $ident {
+        impl Get for $ident {
+            fn route(&self) -> &'static str { $route }
+            fn call(&self, _: Params, _: Request) -> HttpFuture {
+                unimplemented!()
+            }
+        }
+
+        impl Post for $ident {
             fn route(&self) -> &'static str { $route }
             fn call(&self, _: Params, _: Request) -> HttpFuture {
                 unimplemented!()

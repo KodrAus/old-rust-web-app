@@ -9,4 +9,5 @@ futures-cpupool = { git = "https://github.com/alexcrichton/futures-rs" }
 tokio-timer = { git = "https://github.com/KodrAus/tokio-timer" }
 tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
 hyper = { git = "https://github.com/KodrAus/hyper", branch = "tokio" }
-route-recognizer = "0.1"
+route-recognizer = "*"
+error-chain = "*"

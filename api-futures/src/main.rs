@@ -20,7 +20,7 @@ struct Echo {
     cpu_pool: CpuPool
 }
 
-impl Service for Echo {
+impl Get for Echo {
     fn route(&self) -> &'static str { "/" }
 
     fn call(&self, _: Params, _: Request) -> HttpFuture {

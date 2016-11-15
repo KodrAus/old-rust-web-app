@@ -1,21 +1,21 @@
 use std::sync::Arc;
 use futures;
-use hyper::{ self, Get, Post, StatusCode };
+use hyper::{ self, StatusCode, Get as GetMethod, Post as PostMethod };
 use hyper::server::{ Service as HyperService, Request, Response };
 use route_recognizer::Router as Recognizer;
-use super::{ HttpFuture, Service };
+use super::{ HttpFuture, Get, Post };
 
-type HttpRouter = Recognizer<Box<Service>>;
+type HttpRouter<T> = Recognizer<Box<T>>;
 
 #[derive(Clone)]
 pub struct Router {
-    get_router: Arc<HttpRouter>,
-    post_router: Arc<HttpRouter>
+    get_router: Arc<HttpRouter<Get>>,
+    post_router: Arc<HttpRouter<Post>>
 }
 
 pub struct RouterBuilder {
-    get_router: HttpRouter,
-    post_router: HttpRouter
+    get_router: HttpRouter<Get>,
+    post_router: HttpRouter<Post>
 }
 
 impl RouterBuilder {
@@ -27,14 +27,14 @@ impl RouterBuilder {
     }
 
     pub fn get<H>(mut self, handler: H) -> Self where 
-    H: Service + 'static {
+    H: Get + 'static {
         self.get_router.add(handler.route(), Box::new(handler));
 
         self
     }
 
     pub fn post<H>(mut self, handler: H) -> Self where 
-    H: Service + 'static {
+    H: Post + 'static {
         self.post_router.add(handler.route(), Box::new(handler));
 
         self
@@ -55,13 +55,29 @@ impl HyperService for Router {
     type Future = HttpFuture;
 
     fn call(&self, req: Request) -> Self::Future {
-        let router = match *req.method() {
-            Get => &self.get_router,
-            Post => &self.post_router,
+        match *req.method() {
+            GetMethod => self.get(req),
+            PostMethod => self.post(req),
             _ => return box futures::finished(Response::new().status(StatusCode::MethodNotAllowed))
-        };
-        
-        match router.recognize(req.path().unwrap()) {
+        }
+    }
+}
+
+impl Router {
+    fn get(&self, req: Request) -> <Self as HyperService>::Future {
+        match self.get_router.recognize(req.path().unwrap()) {
+            Ok(route) => {
+                let handler = route.handler;
+                let params = route.params;
+
+                handler.call(params, req)
+            },
+            Err(_) => box futures::finished(Response::new().status(StatusCode::NotFound))
+        }
+    }
+
+    fn post(&self, req: Request) -> <Self as HyperService>::Future {
+        match self.post_router.recognize(req.path().unwrap()) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
