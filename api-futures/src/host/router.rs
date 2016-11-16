@@ -109,6 +109,17 @@ impl Router {
     }
 }
 
+/// A conversion trait for handler futures.
+/// 
+/// This is a convenience trait for taking any future with a `Response`
+/// or application `Error` and converting it into a future of a `Response`
+/// or `hyper::Error`.
+/// A failed future is converted into a successful one, but with an appropriate
+/// HTTP status code derived from the error.
+/// 
+/// This particular trait is quite effective because it allows a wide range of
+/// input values, and Rust's type inference will hide the details away for us.
+/// It also helps avoid boxing response futures multiple times.
 pub trait IntoResponse {
     fn into_response(self) -> HttpFuture;
 }

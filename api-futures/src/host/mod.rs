@@ -126,8 +126,7 @@
 //! `T: Post + Route` respectively.
 
 use futures::Future;
-use errors::*;
-pub use hyper::{ StatusCode, Error as HyperError};
+pub use hyper::{ StatusCode, Error};
 pub use hyper::server::{Server, Request, Response};
 
 /// A bucket of parameters matched in the url path.
@@ -148,7 +147,7 @@ pub use route_recognizer::Params;
 /// that gets poked when we allocate.
 /// Once the pointer to the box is dropped, its memory on the heap is
 /// freed deterministically.
-pub type HttpFuture = Box<Future<Item = Response, Error = HyperError>>;
+pub type HttpFuture = Box<Future<Item = Response, Error = Error>>;
 
 /// A constant url pattern.
 /// 
