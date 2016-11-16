@@ -8,7 +8,7 @@ extern crate route_recognizer;
 extern crate webapp_demo;
 
 use std::time::Duration;
-use futures::{Future, IntoFuture, finished, lazy};
+use futures::{Future, finished, lazy};
 use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
 use hyper::header::ContentLength;
@@ -28,7 +28,7 @@ impl Get for MyHandler {
             .header(ContentLength(11u64))
             .body("Hello world".as_bytes());
 
-        FinishedResponse(response).into_future()
+        box finished(response)
     }
 }
 
@@ -51,7 +51,7 @@ impl Post for MyHandler {
             finished(response)
         });
 
-        respond.into_response()
+        respond.into_http_future()
     }
 }
 

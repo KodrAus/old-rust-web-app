@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use futures::{finished, Future, IntoFuture};
+use futures::{finished, Future};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service, Request, Response};
 use route_recognizer::Router as Recognizer;
@@ -113,32 +113,6 @@ impl Router {
     }
 }
 
-pub struct FinishedResponse(pub Response);
-
-impl ::std::ops::Deref for FinishedResponse {
-    type Target = Response;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Into<Response> for FinishedResponse {
-    fn into(self) -> Response {
-        self.0
-    }
-}
-
-impl IntoFuture for FinishedResponse {
-    type Future = HttpFuture;
-    type Item = Response;
-    type Error = hyper::Error;
-
-    fn into_future(self) -> Self::Future {
-        box finished(self.into())
-    }
-}
-
 /// A conversion trait for handler futures.
 ///
 /// This is a convenience trait for taking any future with a `Response`
@@ -151,19 +125,19 @@ impl IntoFuture for FinishedResponse {
 /// input values, and Rust's type inference will hide the details away for us.
 /// It also helps avoid boxing response futures multiple times.
 ///
-/// You can read the implementors section as _implement `IntoResponse` for all
+/// You can read the implementors section as _implement `IntoHttpFuture` for all
 /// types `F`, where `F` is a `Future`, and `F`'s `Item` type can be converted into
 /// a `Response`, and `F`'s `Error` type can be converted into an `Error`_.
-pub trait IntoResponse {
-    fn into_response(self) -> HttpFuture;
+pub trait IntoHttpFuture {
+    fn into_http_future(self) -> HttpFuture;
 }
 
-impl<F> IntoResponse for F
+impl<F> IntoHttpFuture for F
     where F: Future + 'static,
           F::Item: Into<Response>,
           F::Error: Into<Error>
 {
-    fn into_response(self) -> HttpFuture {
+    fn into_http_future(self) -> HttpFuture {
         box self.then(|response| {
             finished(match response {
                 Ok(response) => response.into(),

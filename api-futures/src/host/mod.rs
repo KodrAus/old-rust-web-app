@@ -125,8 +125,9 @@
 //! The `get` and `post` methods expect a `T: Get + Route` and
 //! `T: Post + Route` respectively.
 
-use futures::Future;
-use hyper::Error;
+use futures::{ Future, Finished };
+use hyper::Error as HyperError;
+use errors::*;
 pub use hyper::StatusCode;
 pub use hyper::server::{Server, Request, Response};
 
@@ -148,7 +149,9 @@ pub use route_recognizer::Params;
 /// that gets poked when we allocate.
 /// Once the pointer to the box is dropped, its memory on the heap is
 /// freed deterministically.
-pub type HttpFuture = Box<Future<Item = Response, Error = Error>>;
+pub type HttpFuture = Box<Future<Item = Response, Error = HyperError>>;
+
+pub type HttpFinished = Finished<Response, Error>;
 
 /// A constant url pattern.
 ///
