@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use futures::{finished, Future};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
-use hyper::server::{Service as HyperService, Request, Response};
+use hyper::server::{Service, Request, Response};
 use route_recognizer::Router as Recognizer;
 use errors::*;
 use super::{HttpFuture, Get, Post, Route};
@@ -9,6 +9,9 @@ use super::{HttpFuture, Get, Post, Route};
 type HttpRouter<T> = Recognizer<Box<T>>;
 
 /// A `hyper` service that routes requests to child handlers.
+///
+/// This structure is relatively cheap to clone; it only needs to
+/// increment a single [`Arc`]() pointer.
 #[derive(Clone)]
 pub struct Router {
     routers: Arc<Box<Routers>>,
@@ -25,6 +28,7 @@ pub struct RouterBuilder {
 }
 
 impl RouterBuilder {
+    /// Create a new router builder.
     pub fn new() -> Self {
         RouterBuilder {
             get_router: HttpRouter::new(),
@@ -32,6 +36,7 @@ impl RouterBuilder {
         }
     }
 
+    /// Add a new handler for a `GET` request.
     pub fn get<H>(mut self, handler: H) -> Self
         where H: Get + Route + 'static
     {
@@ -40,6 +45,7 @@ impl RouterBuilder {
         self
     }
 
+    /// Add a new handler for a `POST` request.
     pub fn post<H>(mut self, handler: H) -> Self
         where H: Post + Route + 'static
     {
@@ -48,6 +54,10 @@ impl RouterBuilder {
         self
     }
 
+    /// Build a `Router`.
+    ///
+    /// This function consumes the builder and returns a new
+    /// immutable router with the given handlers.
     pub fn build(self) -> Router {
         Router {
             routers: Arc::new(Box::new(Routers {
@@ -58,7 +68,7 @@ impl RouterBuilder {
     }
 }
 
-impl HyperService for Router {
+impl Service for Router {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
@@ -74,7 +84,7 @@ impl HyperService for Router {
 }
 
 impl Router {
-    fn get(&self, req: Request) -> <Self as HyperService>::Future {
+    fn get(&self, req: Request) -> <Self as Service>::Future {
         let path = req.path().unwrap_or("").to_owned();
 
         match self.routers.get_router.recognize(&path) {
@@ -88,7 +98,7 @@ impl Router {
         }
     }
 
-    fn post(&self, req: Request) -> <Self as HyperService>::Future {
+    fn post(&self, req: Request) -> <Self as Service>::Future {
         let path = req.path().unwrap_or("").to_owned();
 
         match self.routers.post_router.recognize(&path) {
@@ -114,6 +124,10 @@ impl Router {
 /// This particular trait is quite effective because it allows a wide range of
 /// input values, and Rust's type inference will hide the details away for us.
 /// It also helps avoid boxing response futures multiple times.
+///
+/// You can read the implementors section as _implement `IntoResponse` for all
+/// types `F`, where `F` is a `Future`, and `F`'s `Item` type can be converted into
+/// a `Response`, and `F`'s `Error` type can be converted into an `Error`_.
 pub trait IntoResponse {
     fn into_response(self) -> HttpFuture;
 }

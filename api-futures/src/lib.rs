@@ -1,6 +1,6 @@
 //! # A Rust Web API
 //!
-//! This is an example of a typical HTTP API written in Rust.
+//! This is an example of a HTTP API written in Rust.
 //!
 //! ## The state of the world
 //!
@@ -38,6 +38,11 @@
 //! This web app uses the `master` branches of `futures`, `tokio` and `hyper`
 //! to demonstrate what an asynchronous web server could look like in the near
 //! future.
+//! If you're familiar with .NET, `hyper`'s server API is a bit like `Kestrel`,
+//! it gives you the tools to handle the HTTP 1.x protocol, but not much else.
+//! So in order to make our API easier to work with, we have to implement our own
+//! routing.
+//! This infrastructure lives in the `host` module.
 
 #![feature(box_syntax, associated_consts)]
 
@@ -52,5 +57,5 @@ extern crate error_chain;
 /// Web hosting infrastructure.
 pub mod host;
 
-/// Hosting errors.
+/// Application errors.
 pub mod errors;

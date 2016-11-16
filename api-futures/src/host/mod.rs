@@ -126,7 +126,8 @@
 //! `T: Post + Route` respectively.
 
 use futures::Future;
-pub use hyper::{StatusCode, Error};
+use hyper::Error;
+pub use hyper::StatusCode;
 pub use hyper::server::{Server, Request, Response};
 
 /// A bucket of parameters matched in the url path.
