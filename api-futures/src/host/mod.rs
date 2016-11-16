@@ -167,7 +167,7 @@ pub trait Get
     where Self: Send + Sync
 {
     /// Call the handler with the given url parameters and request.
-    fn call(&self, params: Params, req: Request) -> HttpFuture;
+    fn call(&self, params: &Params, req: Request) -> HttpFuture;
 }
 
 /// A handler for a `POST` request.
@@ -178,7 +178,7 @@ pub trait Post
     ///
     /// For posts we could also pre-buffer the request body and
     /// pass it as a parameter to this method.
-    fn call(&self, params: Params, req: Request) -> HttpFuture;
+    fn call(&self, params: &Params, req: Request) -> HttpFuture;
 }
 
 mod router;

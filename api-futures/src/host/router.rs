@@ -87,34 +87,38 @@ impl Router {
     fn get(&self, req: Request) -> <Self as Service>::Future {
         let route = {
             let path = req.path().unwrap_or("");
-            self.routers.get_router.recognize(path)
+            &self.routers.get_router
+                .recognize(path)
+                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
         };
 
-        match route {
-            Ok(route) => {
+        match *route {
+            Ok(ref route) => {
                 let handler = route.handler;
-                let params = route.params;
+                let params = &route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box finished(ErrorKind::NoRouteMatch.into()),
+            Err(ref e @ Error(_, _)) => box finished(e.into()),
         }
     }
 
     fn post(&self, req: Request) -> <Self as Service>::Future {
         let route = {
             let path = req.path().unwrap_or("");
-            self.routers.post_router.recognize(path)
+            &self.routers.post_router
+                .recognize(path)
+                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
         };
 
-        match route {
-            Ok(route) => {
+        match *route {
+            Ok(ref route) => {
                 let handler = route.handler;
-                let params = route.params;
+                let params = &route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box finished(ErrorKind::NoRouteMatch.into()),
+            Err(ref e @ Error(_, _)) => box finished(e.into()),
         }
     }
 }

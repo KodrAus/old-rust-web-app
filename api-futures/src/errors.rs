@@ -22,9 +22,9 @@ error_chain! {
     }
 
 	errors {
-        NoRouteMatch {
+        NoRouteMatch(route: String) {
             description("the route could not be matched to a handler")
-            display("the route could not be matched to a handler")
+            display("the route: '{}' could not be matched to a handler", route)
         }
         MethodNotSupported {
             description("the http method is not supported")
@@ -43,13 +43,27 @@ impl From<Error> for Response {
     }
 }
 
-impl From<ErrorKind> for Response {
-    fn from(err: ErrorKind) -> Response {
+impl <'a> From<&'a Error> for Response {
+    fn from(err: &'a Error) -> Response {
+        let kind = &err.0;
+
+        kind.into()
+    }
+}
+
+impl <'a> From<&'a ErrorKind> for Response {
+    fn from(err: &'a ErrorKind) -> Response {
         match err {
-            ErrorKind::NoRouteMatch => Response::new().status(StatusCode::NotFound),
-            ErrorKind::MethodNotSupported => Response::new().status(StatusCode::MethodNotAllowed),
+            &ErrorKind::NoRouteMatch(_) => Response::new().status(StatusCode::NotFound),
+            &ErrorKind::MethodNotSupported => Response::new().status(StatusCode::MethodNotAllowed),
             // Catch all for any other errors, which get expressed as a 500
             _ => Response::new().status(StatusCode::InternalServerError),
         }
+    }
+}
+
+impl From<ErrorKind> for Response {
+    fn from(err: ErrorKind) -> Response {
+        (&err).into()
     }
 }
