@@ -25,3 +25,5 @@ pub trait Post
 mod router;
 
 pub use self::router::*;
+
+pub mod quick_router;
