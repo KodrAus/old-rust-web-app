@@ -11,9 +11,7 @@ use std::time::Duration;
 use futures::{Future, finished, lazy};
 use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
-use hyper::StatusCode;
 use hyper::header::ContentLength;
-use hyper::server::{Server, Request, Response};
 use webapp_demo::host::*;
 
 struct Echo {
@@ -35,20 +33,16 @@ impl Get for Echo {
             }));
 
         // When the work is finished, build a HTTP response
-        let respond = work.then(|msg| {
-            let response = match msg {
-                Ok(msg) => {
-                    Response::new()
-                        .header(ContentLength(msg.len() as u64))
-                        .body(msg)
-                }
-                Err(_) => Response::new().status(StatusCode::InternalServerError),
-            };
+        let respond = work
+            .and_then(|msg| {
+                let response = Response::new()
+                    .header(ContentLength(msg.len() as u64))
+                    .body(msg);
 
-            finished(response)
-        });
+                finished(response)
+            });
 
-        box respond
+        respond.into_response()
     }
 }
 

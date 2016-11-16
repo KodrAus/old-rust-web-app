@@ -44,6 +44,13 @@
 extern crate futures;
 extern crate hyper;
 extern crate route_recognizer;
+extern crate tokio_timer;
+
+#[macro_use]
+extern crate error_chain;
 
 /// Web hosting infrastructure.
 pub mod host;
+
+/// Hosting errors.
+pub mod errors;

@@ -3,6 +3,9 @@ name = "webapp_demo"
 version = "0.1.0"
 authors = ["Ashley Mannix <ashley.mannix@readify.net>"]
 
+[[bin]]
+name = "webapp_demo_host"
+
 [dependencies]
 # Gives us some primitives for promise-like results
 futures = { git = "https://github.com/alexcrichton/futures-rs" }

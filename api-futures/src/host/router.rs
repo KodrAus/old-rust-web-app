@@ -1,12 +1,14 @@
 use std::sync::Arc;
-use futures;
-use hyper::{self, StatusCode, Get as GetMethod, Post as PostMethod};
+use futures::{ finished, Future };
+use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service as HyperService, Request, Response};
 use route_recognizer::Router as Recognizer;
+use errors::*;
 use super::{HttpFuture, Get, Post, Route};
 
 type HttpRouter<T> = Recognizer<Box<T>>;
 
+/// A `hyper` service that routes requests to child handlers.
 #[derive(Clone)]
 pub struct Router {
     routers: Arc<Box<Routers>>,
@@ -68,33 +70,59 @@ impl HyperService for Router {
         match *req.method() {
             GetMethod => self.get(req),
             PostMethod => self.post(req),
-            _ => return box futures::finished(Response::new().status(StatusCode::MethodNotAllowed)),
+            _ => box finished(ErrorKind::MethodNotSupported.into()),
         }
     }
 }
 
 impl Router {
     fn get(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.routers.get_router.recognize(req.path().unwrap()) {
+        let path = req.path().unwrap_or("").to_owned();
+
+        match self.routers.get_router.recognize(&path) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
 
                 handler.call(params, req)
+            },
+            Err(_) => {
+                box finished(ErrorKind::NoRouteMatch(path).into())
             }
-            Err(_) => box futures::finished(Response::new().status(StatusCode::NotFound)),
         }
     }
 
     fn post(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.routers.post_router.recognize(req.path().unwrap()) {
+        let path = req.path().unwrap_or("").to_owned();
+        
+        match self.routers.post_router.recognize(&path) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
 
                 handler.call(params, req)
+            },
+            Err(_) => {
+                box finished(ErrorKind::NoRouteMatch(path).into())
             }
-            Err(_) => box futures::finished(Response::new().status(StatusCode::NotFound)),
         }
+    }
+}
+
+pub trait IntoResponse {
+    fn into_response(self) -> HttpFuture;
+}
+
+impl <F> IntoResponse for F where
+F: Future + 'static,
+F::Item: Into<Response>,
+F::Error: Into<Error> {
+    fn into_response(self) -> HttpFuture {
+        box self.then(|response| {
+            finished(match response {
+                Ok(response) => response.into(),
+                Err(e) => e.into().into()
+            })
+        })
     }
 }
