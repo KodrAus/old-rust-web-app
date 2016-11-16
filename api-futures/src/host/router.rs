@@ -2,7 +2,7 @@ use std::sync::Arc;
 use futures::{finished, Future};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service, Request, Response};
-use route_recognizer::Router as Recognizer;
+use route_recognizer::{Router as Recognizer};
 use errors::*;
 use super::{HttpFuture, Get, Post, Route};
 
@@ -85,30 +85,36 @@ impl Service for Router {
 
 impl Router {
     fn get(&self, req: Request) -> <Self as Service>::Future {
-        let path = req.path().unwrap_or("").to_owned();
+        let route = {
+            let path = req.path().unwrap_or("");
+            self.routers.get_router.recognize(path)
+        };
 
-        match self.routers.get_router.recognize(&path) {
+        match route {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box finished(ErrorKind::NoRouteMatch(path).into()),
+            Err(_) => box finished(ErrorKind::NoRouteMatch.into()),
         }
     }
 
     fn post(&self, req: Request) -> <Self as Service>::Future {
-        let path = req.path().unwrap_or("").to_owned();
+        let route = {
+            let path = req.path().unwrap_or("");
+            self.routers.post_router.recognize(path)
+        };
 
-        match self.routers.post_router.recognize(&path) {
+        match route {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box finished(ErrorKind::NoRouteMatch(path).into()),
+            Err(_) => box finished(ErrorKind::NoRouteMatch.into()),
         }
     }
 }
