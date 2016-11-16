@@ -2,10 +2,11 @@
 extern crate test;
 use test::Bencher;
 
+extern crate futures;
 extern crate hyper;
 extern crate webapp_demo;
 
-use hyper::server::Request;
+use hyper::server::{ Request, Response };
 use webapp_demo::host::*;
 
 macro_rules! service {
@@ -77,5 +78,16 @@ fn clone_router_10(b: &mut Bencher) {
 
     b.iter(|| {
         test::black_box(router.clone())
+    })
+}
+
+#[bench]
+fn box_finished_future(b: &mut Bencher) {
+    fn response() -> Box<futures::Finished<Response, ()>> {
+        Box::new(futures::finished(Response::new()))
+    }
+
+    b.iter(|| {
+        test::black_box(response())
     })
 }
