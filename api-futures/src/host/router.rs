@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use futures::{finished, Future};
+use futures::{finished, Future, IntoFuture};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service, Request, Response};
 use route_recognizer::Router as Recognizer;
@@ -110,6 +110,32 @@ impl Router {
             }
             Err(_) => box finished(ErrorKind::NoRouteMatch(path).into()),
         }
+    }
+}
+
+pub struct Finished(pub Response);
+
+impl ::std::ops::Deref for Finished {
+    type Target = Response;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Into<Response> for Finished {
+    fn into(self) -> Response {
+        self.0
+    }
+}
+
+impl IntoFuture for Finished {
+    type Future = HttpFuture;
+    type Item = Response;
+    type Error = hyper::Error;
+
+    fn into_future(self) -> Self::Future {
+        box finished(self.into())
     }
 }
 

@@ -8,21 +8,33 @@ extern crate route_recognizer;
 extern crate webapp_demo;
 
 use std::time::Duration;
-use futures::{Future, finished, lazy};
+use futures::{Future, IntoFuture, finished, lazy};
 use futures_cpupool::CpuPool;
 use tokio_timer::Timer;
 use hyper::header::ContentLength;
 use webapp_demo::host::*;
 
-struct Echo {
+struct MyHandler {
     cpu_pool: CpuPool,
 }
 
-impl Route for Echo {
+impl Route for MyHandler {
     const ROUTE: &'static str = "/";
 }
 
-impl Get for Echo {
+impl Get for MyHandler {
+    fn call(&self, _: Params, _: Request) -> HttpFuture {
+        // When the work is finished, build a HTTP response
+        Finished(
+            Response::new()
+            .header(ContentLength(11u64))
+            .body("Hello world".as_bytes())
+        )
+        .into_future()
+    }
+}
+
+impl Post for MyHandler {
     fn call(&self, _: Params, _: Request) -> HttpFuture {
         // Do some 'expensive work' on a background thread
         let work = self.cpu_pool
@@ -49,7 +61,8 @@ fn main() {
     let cpu_pool = CpuPool::new(4);
 
     let router = RouterBuilder::new()
-        .get(Echo { cpu_pool: cpu_pool.clone() })
+        .get(MyHandler { cpu_pool: cpu_pool.clone() })
+        .post(MyHandler { cpu_pool: cpu_pool.clone() })
         .build();
 
     let addr = "127.0.0.1:1337".parse().unwrap();
