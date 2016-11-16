@@ -1,5 +1,5 @@
 //! # Errors
-//! 
+//!
 //! Rust doesn't have exceptions, so errors are expressed as a variant on
 //! the standard library [`Result`]() type that implements the [`Error`]()
 //! trait.
@@ -7,7 +7,7 @@
 //! manually, and leads to a lot of conversion boiletplate.
 //! Luckily we have crates like [`error-chain`]() that make it really easy to
 //! declare error types.
-//! 
+//!
 //! Errors are treated a bit differently in our web server, because HTTP has a
 //! particular way of notifying the client that something went wrong.
 //! So when we encounter an application error we unwrap it to a `Result::Ok`
@@ -33,7 +33,7 @@ error_chain! {
     }
 }
 
-use host::{ Response, StatusCode };
+use host::{Response, StatusCode};
 
 impl From<Error> for Response {
     fn from(err: Error) -> Response {

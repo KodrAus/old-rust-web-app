@@ -33,14 +33,13 @@ impl Get for Echo {
             }));
 
         // When the work is finished, build a HTTP response
-        let respond = work
-            .and_then(|msg| {
-                let response = Response::new()
-                    .header(ContentLength(msg.len() as u64))
-                    .body(msg);
+        let respond = work.and_then(|msg| {
+            let response = Response::new()
+                .header(ContentLength(msg.len() as u64))
+                .body(msg);
 
-                finished(response)
-            });
+            finished(response)
+        });
 
         respond.into_response()
     }

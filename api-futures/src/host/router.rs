@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use futures::{ finished, Future };
+use futures::{finished, Future};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service as HyperService, Request, Response};
 use route_recognizer::Router as Recognizer;
@@ -50,12 +50,10 @@ impl RouterBuilder {
 
     pub fn build(self) -> Router {
         Router {
-            routers: Arc::new(Box::new(
-                Routers {
-                    get_router: self.get_router,
-                    post_router: self.post_router,
-                }
-            ))
+            routers: Arc::new(Box::new(Routers {
+                get_router: self.get_router,
+                post_router: self.post_router,
+            })),
         }
     }
 }
@@ -85,38 +83,34 @@ impl Router {
                 let params = route.params;
 
                 handler.call(params, req)
-            },
-            Err(_) => {
-                box finished(ErrorKind::NoRouteMatch(path).into())
             }
+            Err(_) => box finished(ErrorKind::NoRouteMatch(path).into()),
         }
     }
 
     fn post(&self, req: Request) -> <Self as HyperService>::Future {
         let path = req.path().unwrap_or("").to_owned();
-        
+
         match self.routers.post_router.recognize(&path) {
             Ok(route) => {
                 let handler = route.handler;
                 let params = route.params;
 
                 handler.call(params, req)
-            },
-            Err(_) => {
-                box finished(ErrorKind::NoRouteMatch(path).into())
             }
+            Err(_) => box finished(ErrorKind::NoRouteMatch(path).into()),
         }
     }
 }
 
 /// A conversion trait for handler futures.
-/// 
+///
 /// This is a convenience trait for taking any future with a `Response`
 /// or application `Error` and converting it into a future of a `Response`
 /// or `hyper::Error`.
 /// A failed future is converted into a successful one, but with an appropriate
 /// HTTP status code derived from the error.
-/// 
+///
 /// This particular trait is quite effective because it allows a wide range of
 /// input values, and Rust's type inference will hide the details away for us.
 /// It also helps avoid boxing response futures multiple times.
@@ -124,15 +118,16 @@ pub trait IntoResponse {
     fn into_response(self) -> HttpFuture;
 }
 
-impl <F> IntoResponse for F where
-F: Future + 'static,
-F::Item: Into<Response>,
-F::Error: Into<Error> {
+impl<F> IntoResponse for F
+    where F: Future + 'static,
+          F::Item: Into<Response>,
+          F::Error: Into<Error>
+{
     fn into_response(self) -> HttpFuture {
         box self.then(|response| {
             finished(match response {
                 Ok(response) => response.into(),
-                Err(e) => e.into().into()
+                Err(e) => e.into().into(),
             })
         })
     }
