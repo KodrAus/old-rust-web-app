@@ -22,6 +22,7 @@ impl Route for MyHandler {
     const ROUTE: &'static str = "/";
 }
 
+// 'GET /'
 impl Get for MyHandler {
     fn call(&self, _: Params, _: Request) -> HttpFuture {
         let response = Response::new()
@@ -32,6 +33,7 @@ impl Get for MyHandler {
     }
 }
 
+// 'POST /'
 impl Post for MyHandler {
     fn call(&self, _: Params, _: Request) -> HttpFuture {
         // Do some 'expensive work' on a background thread

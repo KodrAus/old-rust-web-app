@@ -125,7 +125,7 @@
 //! The `get` and `post` methods expect a `T: Get + Route` and
 //! `T: Post + Route` respectively.
 
-use futures::{ Future, Finished };
+use futures::{Future, Finished};
 use hyper::Error as HyperError;
 use errors::*;
 pub use hyper::StatusCode;
@@ -151,6 +151,7 @@ pub use route_recognizer::Params;
 /// freed deterministically.
 pub type HttpFuture = Box<Future<Item = Response, Error = HyperError>>;
 
+/// A future representing a completed `Response.
 pub type HttpFinished = Finished<Response, Error>;
 
 /// A constant url pattern.
