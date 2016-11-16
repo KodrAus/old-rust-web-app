@@ -24,13 +24,11 @@ impl Route for MyHandler {
 
 impl Get for MyHandler {
     fn call(&self, _: Params, _: Request) -> HttpFuture {
-        // When the work is finished, build a HTTP response
-        Finished(
-            Response::new()
+        let response = Response::new()
             .header(ContentLength(11u64))
-            .body("Hello world".as_bytes())
-        )
-        .into_future()
+            .body("Hello world".as_bytes());
+
+        FinishedResponse(response).into_future()
     }
 }
 

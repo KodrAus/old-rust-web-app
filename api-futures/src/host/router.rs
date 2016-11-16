@@ -113,9 +113,9 @@ impl Router {
     }
 }
 
-pub struct Finished(pub Response);
+pub struct FinishedResponse(pub Response);
 
-impl ::std::ops::Deref for Finished {
+impl ::std::ops::Deref for FinishedResponse {
     type Target = Response;
 
     fn deref(&self) -> &Self::Target {
@@ -123,13 +123,13 @@ impl ::std::ops::Deref for Finished {
     }
 }
 
-impl Into<Response> for Finished {
+impl Into<Response> for FinishedResponse {
     fn into(self) -> Response {
         self.0
     }
 }
 
-impl IntoFuture for Finished {
+impl IntoFuture for FinishedResponse {
     type Future = HttpFuture;
     type Item = Response;
     type Error = hyper::Error;
