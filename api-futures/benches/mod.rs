@@ -17,13 +17,13 @@ macro_rules! service {
         }
 
         impl Get for $ident {
-            fn call(&self, _: Params, _: Request) -> HttpFuture {
+            fn call(&self, _: &Params, _: Request) -> HttpFuture {
                 unimplemented!()
             }
         }
 
         impl Post for $ident {
-            fn call(&self, _: Params, _: Request) -> HttpFuture {
+            fn call(&self, _: &Params, _: Request) -> HttpFuture {
                 unimplemented!()
             }
         }

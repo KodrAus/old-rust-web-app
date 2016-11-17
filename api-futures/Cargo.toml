@@ -1,20 +1,29 @@
 [package]
 name = "webapp_demo"
 version = "0.1.0"
-authors = ["Ashley Mannix <ashley.mannix@readify.net>"]
+authors = ["Ashley Mannix <ashleymannix@live.com.au>"]
+
+[[bin]]
+name = "webapp_demo_host"
 
 [dependencies]
-# Gives us some primitives for promise-like results
+# Primitives for promise-like results
 futures = { git = "https://github.com/alexcrichton/futures-rs" }
 
-# Gives us a cpu pool for running computations asynchronously
+# CPU pool for running computations asynchronously
 futures-cpupool = { git = "https://github.com/alexcrichton/futures-rs" }
 
-# Gives us efficient promise-based timers
+# Efficient promise-based timers
 tokio-timer = { git = "https://github.com/KodrAus/tokio-timer" }
 
-# Gives us a common service contract for async io
+# A common service contract for async io
 tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
+
+# The HTTP protocol implementation over async io
 hyper = { git = "https://github.com/KodrAus/hyper", branch = "tokio" }
+
+# Match routes from url paths with replacement params
 route-recognizer = "*"
+
+# Define error types without boilerplate
 error-chain = "*"

@@ -1,12 +1,17 @@
 use std::sync::Arc;
-use futures;
-use hyper::{self, StatusCode, Get as GetMethod, Post as PostMethod};
-use hyper::server::{Service as HyperService, Request, Response};
-use route_recognizer::Router as Recognizer;
+use futures::{finished, Future};
+use hyper::{self, Get as GetMethod, Post as PostMethod};
+use hyper::server::{Service, Request, Response};
+use route_recognizer::{Router as Recognizer};
+use errors::*;
 use super::{HttpFuture, Get, Post, Route};
 
 type HttpRouter<T> = Recognizer<Box<T>>;
 
+/// A `hyper` service that routes requests to child handlers.
+///
+/// This structure is relatively cheap to clone; it only needs to
+/// increment a single [`Arc`]() pointer.
 #[derive(Clone)]
 pub struct Router {
     routers: Arc<Box<Routers>>,
@@ -23,6 +28,7 @@ pub struct RouterBuilder {
 }
 
 impl RouterBuilder {
+    /// Create a new router builder.
     pub fn new() -> Self {
         RouterBuilder {
             get_router: HttpRouter::new(),
@@ -30,6 +36,7 @@ impl RouterBuilder {
         }
     }
 
+    /// Add a new handler for a `GET` request.
     pub fn get<H>(mut self, handler: H) -> Self
         where H: Get + Route + 'static
     {
@@ -38,6 +45,7 @@ impl RouterBuilder {
         self
     }
 
+    /// Add a new handler for a `POST` request.
     pub fn post<H>(mut self, handler: H) -> Self
         where H: Post + Route + 'static
     {
@@ -46,19 +54,21 @@ impl RouterBuilder {
         self
     }
 
+    /// Build a `Router`.
+    ///
+    /// This function consumes the builder and returns a new
+    /// immutable router with the given handlers.
     pub fn build(self) -> Router {
         Router {
-            routers: Arc::new(Box::new(
-                Routers {
-                    get_router: self.get_router,
-                    post_router: self.post_router,
-                }
-            ))
+            routers: Arc::new(Box::new(Routers {
+                get_router: self.get_router,
+                post_router: self.post_router,
+            })),
         }
     }
 }
 
-impl HyperService for Router {
+impl Service for Router {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
@@ -68,33 +78,81 @@ impl HyperService for Router {
         match *req.method() {
             GetMethod => self.get(req),
             PostMethod => self.post(req),
-            _ => return box futures::finished(Response::new().status(StatusCode::MethodNotAllowed)),
+            _ => box finished(ErrorKind::MethodNotSupported.into()),
         }
     }
 }
 
 impl Router {
-    fn get(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.routers.get_router.recognize(req.path().unwrap()) {
-            Ok(route) => {
+    fn get(&self, req: Request) -> <Self as Service>::Future {
+        let route = {
+            let path = req.path().unwrap_or("");
+            &self.routers.get_router
+                .recognize(path)
+                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
+        };
+
+        match *route {
+            Ok(ref route) => {
                 let handler = route.handler;
-                let params = route.params;
+                let params = &route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box futures::finished(Response::new().status(StatusCode::NotFound)),
+            Err(ref e @ Error(_, _)) => box finished(e.into()),
         }
     }
 
-    fn post(&self, req: Request) -> <Self as HyperService>::Future {
-        match self.routers.post_router.recognize(req.path().unwrap()) {
-            Ok(route) => {
+    fn post(&self, req: Request) -> <Self as Service>::Future {
+        let route = {
+            let path = req.path().unwrap_or("");
+            &self.routers.post_router
+                .recognize(path)
+                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
+        };
+
+        match *route {
+            Ok(ref route) => {
                 let handler = route.handler;
-                let params = route.params;
+                let params = &route.params;
 
                 handler.call(params, req)
             }
-            Err(_) => box futures::finished(Response::new().status(StatusCode::NotFound)),
+            Err(ref e @ Error(_, _)) => box finished(e.into()),
         }
+    }
+}
+
+/// A conversion trait for handler futures.
+///
+/// This is a convenience trait for taking any future with a `Response`
+/// or application `Error` and converting it into a future of a `Response`
+/// or `hyper::Error`.
+/// A failed future is converted into a successful one, but with an appropriate
+/// HTTP status code derived from the error.
+///
+/// This particular trait is quite effective because it allows a wide range of
+/// input values, and Rust's type inference will hide the details away for us.
+/// It also helps avoid boxing response futures multiple times.
+///
+/// You can read the implementors section as _implement `IntoHttpFuture` for all
+/// types `F`, where `F` is a `Future`, and `F`'s `Item` type can be converted into
+/// a `Response`, and `F`'s `Error` type can be converted into an `Error`_.
+pub trait IntoHttpFuture {
+    fn into_http_future(self) -> HttpFuture;
+}
+
+impl<F> IntoHttpFuture for F
+    where F: Future + 'static,
+          F::Item: Into<Response>,
+          F::Error: Into<Error>
+{
+    fn into_http_future(self) -> HttpFuture {
+        box self.then(|response| {
+            finished(match response {
+                Ok(response) => response.into(),
+                Err(e) => e.into().into(),
+            })
+        })
     }
 }
