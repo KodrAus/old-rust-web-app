@@ -24,7 +24,7 @@ impl Route for MyHandler {
 
 // 'GET /'
 impl Get for MyHandler {
-    fn call(&self, _: &Params, _: Request) -> HttpFuture {
+    fn call(&self, _: Params, _: Request) -> HttpFuture {
         let response = Response::new()
             .header(ContentLength(11u64))
             .body("Hello world".as_bytes());
@@ -35,7 +35,7 @@ impl Get for MyHandler {
 
 // 'POST /'
 impl Post for MyHandler {
-    fn call(&self, _: &Params, _: Request) -> HttpFuture {
+    fn call(&self, _: Params, _: Request) -> HttpFuture {
         // Do some 'expensive work' on a background thread
         let work = self.cpu_pool
             .spawn(lazy(|| {

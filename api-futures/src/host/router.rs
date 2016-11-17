@@ -98,7 +98,7 @@ impl Router {
                 let handler = route.handler;
                 let params = route.params;
 
-                Ok(handler.call(&params, req))
+                Ok(handler.call(params, req))
             })
             .unwrap_or_else(|e| {
                 box finished(Response::from(e))
@@ -119,7 +119,7 @@ impl Router {
                 let handler = route.handler;
                 let params = route.params;
 
-                Ok(handler.call(&params, req))
+                Ok(handler.call(params, req))
             })
             .unwrap_or_else(|e| {
                 box finished(Response::from(e))
