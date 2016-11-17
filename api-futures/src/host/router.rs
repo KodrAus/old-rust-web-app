@@ -85,41 +85,45 @@ impl Service for Router {
 
 impl Router {
     fn get(&self, req: Request) -> <Self as Service>::Future {
-        let route = {
-            let path = req.path().unwrap_or("");
-            &self.routers.get_router
-                .recognize(path)
-                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
-        };
-
-        match *route {
-            Ok(ref route) => {
+        req.path()
+            .ok_or({
+                Error::from(ErrorKind::NoRouteSpecified)
+            })
+            .and_then(|path| {
+                self.routers.get_router
+                    .recognize(path)
+                    .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
+            })
+            .map(|route| {
                 let handler = route.handler;
-                let params = &route.params;
+                let params = route.params;
 
-                handler.call(params, req)
-            }
-            Err(ref e @ Error(_, _)) => box finished(e.into()),
-        }
+                handler.call(&params, req)
+            })
+            .unwrap_or_else(|e| {
+                box finished(Response::from(e))
+            })
     }
 
     fn post(&self, req: Request) -> <Self as Service>::Future {
-        let route = {
-            let path = req.path().unwrap_or("");
-            &self.routers.post_router
-                .recognize(path)
-                .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
-        };
-
-        match *route {
-            Ok(ref route) => {
+        req.path()
+            .ok_or({
+                Error::from(ErrorKind::NoRouteSpecified)
+            })
+            .and_then(|path| {
+                self.routers.post_router
+                    .recognize(path)
+                    .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
+            })
+            .map(|route| {
                 let handler = route.handler;
-                let params = &route.params;
+                let params = route.params;
 
-                handler.call(params, req)
-            }
-            Err(ref e @ Error(_, _)) => box finished(e.into()),
-        }
+                handler.call(&params, req)
+            })
+            .unwrap_or_else(|e| {
+                box finished(Response::from(e))
+            })
     }
 }
 

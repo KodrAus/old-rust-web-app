@@ -21,10 +21,14 @@ error_chain! {
         tokio_timer::TimerError, Timer;
     }
 
-	errors {
+    errors {
         NoRouteMatch(route: String) {
             description("the route could not be matched to a handler")
             display("the route: '{}' could not be matched to a handler", route)
+        }
+        NoRouteSpecified {
+            description("the route was not specified")
+            display("the route was not specified")
         }
         MethodNotSupported {
             description("the http method is not supported")
@@ -55,6 +59,7 @@ impl <'a> From<&'a ErrorKind> for Response {
     fn from(err: &'a ErrorKind) -> Response {
         match err {
             &ErrorKind::NoRouteMatch(_) => Response::new().status(StatusCode::NotFound),
+            &ErrorKind::NoRouteSpecified => Response::new().status(StatusCode::BadRequest),
             &ErrorKind::MethodNotSupported => Response::new().status(StatusCode::MethodNotAllowed),
             // Catch all for any other errors, which get expressed as a 500
             _ => Response::new().status(StatusCode::InternalServerError),
