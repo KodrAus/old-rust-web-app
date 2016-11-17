@@ -94,11 +94,11 @@ impl Router {
                     .recognize(path)
                     .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
             })
-            .map(|route| {
+            .and_then(|route| {
                 let handler = route.handler;
                 let params = route.params;
 
-                handler.call(&params, req)
+                Ok(handler.call(&params, req))
             })
             .unwrap_or_else(|e| {
                 box finished(Response::from(e))
@@ -115,11 +115,11 @@ impl Router {
                     .recognize(path)
                     .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
             })
-            .map(|route| {
+            .and_then(|route| {
                 let handler = route.handler;
                 let params = route.params;
 
-                handler.call(&params, req)
+                Ok(handler.call(&params, req))
             })
             .unwrap_or_else(|e| {
                 box finished(Response::from(e))
