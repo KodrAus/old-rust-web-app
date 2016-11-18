@@ -6,6 +6,9 @@ authors = ["Ashley Mannix <ashleymannix@live.com.au>"]
 [[bin]]
 name = "webapp_demo_host"
 
+[profile.release]
+debug = true
+
 [dependencies]
 # Primitives for promise-like results
 futures = { git = "https://github.com/alexcrichton/futures-rs" }
@@ -27,3 +30,12 @@ route-recognizer = "*"
 
 # Define error types without boilerplate
 error-chain = "*"
+
+# A super fast serialisation framework
+serde = "*"
+
+# Serialise serde structures as json
+serde_json = "*"
+
+# Lets us automatically derive serialisation at compile time
+serde_derive = "*"

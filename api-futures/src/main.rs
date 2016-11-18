@@ -1,5 +1,8 @@
 #![feature(box_syntax, associated_consts)]
 
+extern crate serde;
+extern crate serde_json;
+
 extern crate futures;
 extern crate futures_cpupool;
 extern crate tokio_timer;

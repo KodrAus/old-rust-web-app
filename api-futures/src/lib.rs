@@ -44,7 +44,12 @@
 //! routing.
 //! This infrastructure lives in the `host` module.
 
-#![feature(box_syntax, associated_consts)]
+#![feature(box_syntax, associated_consts, proc_macro)]
+
+#[macro_use]
+extern crate serde_derive;
+
+extern crate serde;
 
 extern crate futures;
 extern crate hyper;
