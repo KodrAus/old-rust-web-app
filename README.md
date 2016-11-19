@@ -11,6 +11,28 @@ This lets you easily install and update multiple Rust toolchains.
 
 This application is targeting the `nightly` channel.
 
+To keep things simple, we're targeting a specific `nightly` build too, which is easy to install with `rustup` by running the following command:
+
+```
+rustup toolchain install nightly-2016-11-06
+```
+
+We can then set the default toolchain for our web project so it uses the right one.
+
+```
+cd <root of the cloned repository>
+rustup override set nightly-2016-11-06
+```
+
+You should see output like the following (depending on your OS):
+
+```
+info: using existing install for 'nightly-x86_64-unknown-linux-gnu'
+info: override toolchain for '/home/ashley/src/rust-webapp' set to 'nightly-x86_64-unknown-linux-gnu'
+
+  nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.14.0-nightly (cae6ab1c4 2016-11-05)
+```
+
 ### Run the app
 
 ```
