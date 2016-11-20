@@ -19,6 +19,10 @@ use tokio_timer::Timer;
 use hyper::header::ContentLength;
 use webapp_demo::host::*;
 
+/// A handler for a HTTP request.
+/// 
+/// This handler implements `Route + Get + Post`, so can
+/// be used to handle either of those verbs.
 struct MyHandler {
     cpu_pool: CpuPool,
 }
@@ -63,16 +67,20 @@ impl Post for MyHandler {
 }
 
 fn main() {
+    // Create a background worker pool.
     let cpu_pool = CpuPool::new(4);
 
+    // Create a request router with our handlers.
     let router = RouterBuilder::new()
         .get(MyHandler { cpu_pool: cpu_pool.clone() })
         .post(MyHandler { cpu_pool: cpu_pool.clone() })
         .build();
 
+    // Create a `tokio` reactor.
     let mut core = Core::new().unwrap();
     let handle = core.handle();
 
+    // Set up our server to run on the reactor.
     let addr = "127.0.0.1:1337".parse().unwrap();
     let server = Server::http(&addr).unwrap();
     let lst = server.handle(move || Ok(router.clone()), &handle).unwrap();

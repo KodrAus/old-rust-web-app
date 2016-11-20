@@ -33,6 +33,10 @@ info: override toolchain for '/home/ashley/src/rust-webapp' set to 'nightly-x86_
   nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.14.0-nightly (cae6ab1c4 2016-11-05)
 ```
 
+### Run Redis
+
+This application expects [redis](http://redis.io/) to be running locally on port `6379`. You can run Redis on most platforms using [docker](https://www.docker.com/products/overview).
+
 ### Run the app
 
 ```
@@ -40,7 +44,7 @@ cd api
 cargo run
 ```
 
-Then open a browser to `http://localhost:3000`.
+Then open a browser to `http://localhost:1337`.
 
 ### Run tests
 

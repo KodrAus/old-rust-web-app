@@ -2,7 +2,7 @@ use std::sync::Arc;
 use futures::{finished, Future};
 use hyper::{self, Get as GetMethod, Post as PostMethod};
 use hyper::server::{Service, Request, Response};
-use route_recognizer::{Router as Recognizer};
+use route_recognizer::Router as Recognizer;
 use errors::*;
 use super::{HttpFuture, Get, Post, Route};
 
@@ -90,7 +90,8 @@ impl Router {
                 Error::from(ErrorKind::NoRouteSpecified)
             })
             .and_then(|path| {
-                self.routers.get_router
+                self.routers
+                    .get_router
                     .recognize(path)
                     .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
             })
@@ -100,9 +101,7 @@ impl Router {
 
                 Ok(handler.call(params, req))
             })
-            .unwrap_or_else(|e| {
-                box finished(Response::from(e))
-            })
+            .unwrap_or_else(|e| box finished(Response::from(e)))
     }
 
     fn post(&self, req: Request) -> <Self as Service>::Future {
@@ -111,7 +110,8 @@ impl Router {
                 Error::from(ErrorKind::NoRouteSpecified)
             })
             .and_then(|path| {
-                self.routers.post_router
+                self.routers
+                    .post_router
                     .recognize(path)
                     .map_err(|_| ErrorKind::NoRouteMatch(path.to_owned()).into())
             })
@@ -121,9 +121,7 @@ impl Router {
 
                 Ok(handler.call(params, req))
             })
-            .unwrap_or_else(|e| {
-                box finished(Response::from(e))
-            })
+            .unwrap_or_else(|e| box finished(Response::from(e)))
     }
 }
 

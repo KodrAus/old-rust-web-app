@@ -47,7 +47,7 @@ impl From<Error> for Response {
     }
 }
 
-impl <'a> From<&'a Error> for Response {
+impl<'a> From<&'a Error> for Response {
     fn from(err: &'a Error) -> Response {
         let kind = &err.0;
 
@@ -55,7 +55,7 @@ impl <'a> From<&'a Error> for Response {
     }
 }
 
-impl <'a> From<&'a ErrorKind> for Response {
+impl<'a> From<&'a ErrorKind> for Response {
     fn from(err: &'a ErrorKind) -> Response {
         match err {
             &ErrorKind::NoRouteMatch(_) => Response::new().status(StatusCode::NotFound),

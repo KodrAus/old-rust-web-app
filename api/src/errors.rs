@@ -1,3 +1,13 @@
+//! # Errors
+//!
+//! Rust doesn't have exceptions, so errors are expressed as a variant on
+//! the standard library [`Result`]() type that implements the [`Error`]()
+//! trait.
+//! The problem with the `Error` trait is that it can be cumbersome to implement
+//! manually, and leads to a lot of conversion boiletplate.
+//! Luckily we have crates like [`error-chain`]() that make it really easy to
+//! declare error types.
+
 use redis;
 use serde_json;
 

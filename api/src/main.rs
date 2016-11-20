@@ -22,76 +22,22 @@ pub mod errors;
 /// App model.
 pub mod model;
 
-use std::convert::TryInto;
-use redis::Commands;
+/// Web handler routes.
+pub mod routes;
+
 use iron::prelude::*;
-use iron::status;
 use router::Router;
 
-use errors::*;
-use model::*;
-
-fn get_id(req: &Request) -> Result<Id> {
-    req.extensions.get::<Router>()
-        .unwrap()
-        .find("id")
-        .unwrap_or("")
-        .try_into()
-}
-
-fn get_conn() -> Result<redis::Connection> {
-    let client = redis::Client::open("redis://127.0.0.1/")?;
-    client.get_connection().map_err(|e| e.into())
-}
-
 fn main() {
+    // Create a new Iron router
     let mut router = Router::new();
-    router.get("/person/:id", get_person, "get_person");
-    router.post("/person/:id", post_person, "post_person");
 
-    Iron::new(router).http("localhost:3000").unwrap();
+    // Get a person by id
+    router.get("/person/:id", routes::get_person, "get_person");
 
-    fn get_person(req: &mut Request) -> IronResult<Response> {
-        let id = get_id(&req)?;
+    // Post an updated person value
+    router.post("/person/:id", routes::post_person, "post_person");
 
-        let conn = get_conn()?;
-
-        // Maybe get the serialised person from Redis
-        let person_data: Option<String> = conn
-            .get(id.as_ref())
-            .map_err(|e| Error::from(e))?;
-
-        // Unwrap the serialised data, or return a `PersonNotFound` error
-        let person_data = person_data
-            .ok_or(Error::from(ErrorKind::PersonNotFound))?;
-
-        Ok(Response::with((status::Ok, person_data)))
-    }
-
-    fn post_person(req: &mut Request) -> IronResult<Response> {
-        #[derive(Deserialize)]
-        struct PostPersonCommand {
-            pub name: String
-        }
-
-        let id = get_id(&req)?;
-
-        let conn = get_conn()?;
-
-        let person: PostPersonCommand = serde_json::from_reader(&mut req.body)
-            .map_err(|e| Error::from(e))?;
-
-        let person = Person {
-            id: id,
-            name: person.name
-        };
-
-        let person_data = serde_json::to_string(&person)
-            .map_err(|e| Error::from(e))?;
-
-        conn.set(person.id.as_ref(), person_data)
-            .map_err(|e| Error::from(e))?;
-
-        Ok(Response::with(status::Ok))
-    }
+    // Create the Iron server with the router and start listening
+    Iron::new(router).http("localhost:1337").unwrap();
 }
