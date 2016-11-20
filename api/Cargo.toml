@@ -11,6 +11,9 @@ iron = "*"
 # Lets us route requests to different handlers based on the url
 router = "*"
 
+# Client library for Redis
+redis = "*"
+
 # A super fast serialisation framework
 serde = "*"
 
