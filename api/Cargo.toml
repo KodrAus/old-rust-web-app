@@ -22,3 +22,6 @@ serde_derive = "*"
 
 # Makes it easy to write new Rust Error types
 error-chain = "*"
+
+# We used this macro for testing json responses easily
+json_str = "*"

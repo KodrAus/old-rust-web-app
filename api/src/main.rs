@@ -3,6 +3,9 @@
 #[macro_use]
 extern crate error_chain;
 
+#[macro_use]
+extern crate json_str;
+
 extern crate iron;
 extern crate router;
 

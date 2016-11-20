@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "error-chain 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "json_str 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "router 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -154,6 +155,11 @@ dependencies = [
 [[package]]
 name = "itoa"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "json_str"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -449,6 +455,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum idna 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1053236e00ce4f668aeca4a769a09b3bf5a682d802abd6f3cb39374f6b162c11"
 "checksum iron 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9fb1b2d809f84bf347e472d5758762b5c804e0c622970235f156d82673e4d334"
 "checksum itoa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ae3088ea4baeceb0284ee9eea42f591226e6beaecf65373e41b38d95a1b8e7a1"
+"checksum json_str 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b1326c24cbf130d779369d65744278aef833534e6e3059d477872fb864f12370"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 "checksum language-tags 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
 "checksum lazy_static 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "cf186d1a8aa5f5bee5fd662bc9c1b949e0259e1bcc379d1f006847b0080c7417"
