@@ -10,6 +10,7 @@ dependencies = [
  "serde 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-core 0.1.0 (git+https://github.com/tokio-rs/tokio-core)",
  "tokio-service 0.1.0 (git+https://github.com/tokio-rs/tokio-service)",
  "tokio-timer 0.1.0 (git+https://github.com/KodrAus/tokio-timer)",
 ]

@@ -16,6 +16,9 @@ futures = { git = "https://github.com/alexcrichton/futures-rs" }
 # CPU pool for running computations asynchronously
 futures-cpupool = { git = "https://github.com/alexcrichton/futures-rs" }
 
+# The core event loop for futures-based async io
+tokio-core = { git = "https://github.com/tokio-rs/tokio-core" }
+
 # Efficient promise-based timers
 tokio-timer = { git = "https://github.com/KodrAus/tokio-timer" }
 

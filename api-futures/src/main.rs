@@ -5,6 +5,7 @@ extern crate serde_json;
 
 extern crate futures;
 extern crate futures_cpupool;
+extern crate tokio_core;
 extern crate tokio_timer;
 extern crate hyper;
 extern crate route_recognizer;
@@ -13,6 +14,7 @@ extern crate webapp_demo;
 use std::time::Duration;
 use futures::{Future, finished, lazy};
 use futures_cpupool::CpuPool;
+use tokio_core::reactor::Core;
 use tokio_timer::Timer;
 use hyper::header::ContentLength;
 use webapp_demo::host::*;
@@ -68,11 +70,15 @@ fn main() {
         .post(MyHandler { cpu_pool: cpu_pool.clone() })
         .build();
 
+    let mut core = Core::new().unwrap();
+    let handle = core.handle();
+
     let addr = "127.0.0.1:1337".parse().unwrap();
     let server = Server::http(&addr).unwrap();
-    let (lst, server) = server.standalone(move || Ok(router.clone())).unwrap();
+    let lst = server.handle(move || Ok(router.clone()), &handle).unwrap();
 
     println!("listening on {}", lst);
 
-    server.run();
+    // Run the server 4eva
+    core.run(futures::empty::<(), ()>()).unwrap();
 }

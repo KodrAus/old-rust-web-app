@@ -31,14 +31,12 @@ use router::Router;
 use errors::*;
 use model::*;
 
-macro_rules! get_id {
-    ($req:ident) => (
-        $req.extensions.get::<Router>()
-            .unwrap()
-            .find("id")
-            .unwrap_or("")
-            .try_into()?;
-    )
+fn get_id(req: &Request) -> Result<Id> {
+    req.extensions.get::<Router>()
+        .unwrap()
+        .find("id")
+        .unwrap_or("")
+        .try_into()
 }
 
 fn get_conn() -> Result<redis::Connection> {
@@ -54,7 +52,7 @@ fn main() {
     Iron::new(router).http("localhost:3000").unwrap();
 
     fn get_person(req: &mut Request) -> IronResult<Response> {
-        let id: Id = get_id!(req);
+        let id = get_id(&req)?;
 
         let conn = get_conn()?;
 
@@ -64,11 +62,8 @@ fn main() {
             .map_err(|e| Error::from(e))?;
 
         // Unwrap the serialised data, or return a `PersonNotFound` error
-        let person_data = person_data.ok_or(Error::from(ErrorKind::PersonNotFound))?;
-
-        // Deserialise the person
-        let person: Person = serde_json::from_str(&person_data)
-            .map_err(|e| Error::from(e))?;
+        let person_data = person_data
+            .ok_or(Error::from(ErrorKind::PersonNotFound))?;
 
         Ok(Response::with((status::Ok, person_data)))
     }
@@ -79,7 +74,7 @@ fn main() {
             pub name: String
         }
 
-        let id: Id = get_id!(req);
+        let id = get_id(&req)?;
 
         let conn = get_conn()?;
 
