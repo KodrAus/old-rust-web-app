@@ -34,7 +34,7 @@ use iron::status::Status;
 impl From<Error> for IronError {
     fn from(err: Error) -> IronError {
         match err {
-            e @ Error(ErrorKind::PersonNotFound, _) => IronError::new(e, Status::NotFound),
+            e @ Error { kind: ErrorKind::PersonNotFound, state: _ } => IronError::new(e, Status::NotFound),
             e => IronError::new(e, Status::InternalServerError),
         }
     }
