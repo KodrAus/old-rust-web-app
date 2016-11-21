@@ -8,15 +8,6 @@ This repo is part of a Rust introduction workshop, which you can follow [here](h
 
 The `/api` folder includes an implementation of the API built in the guide. The `/api-futures` folder includes an implementation of a simpler API built using the new, unreleased asynchronous io `futures` + `tokio` stack.
 
-### Run the app
-
-```
-cd api
-cargo run
-```
-
-Then open a browser to `http://localhost:1337`.
-
 ### Run tests
 
 ```
