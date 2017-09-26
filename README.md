@@ -1,5 +1,7 @@
 # A Rust Web app [![Build Status](https://travis-ci.org/KodrAus/rust-webapp.svg?branch=master)](https://travis-ci.org/KodrAus/rust-webapp)
 
+This application is a bit out of date now. For something more current, and more focused on application development, see [here](https://github.com/KodrAus/rust-web-app).
+
 This is an example web application written in the [Rust](https://www.rust-lang.org) programming language.
 
 ## Getting started
